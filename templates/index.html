@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Poker Club Power Rankings</title></head>
+<body>
+  <h1>Power Rankings</h1>
+  <table>
+    <thead><tr><th>Rank</th><th>Player</th><th>Score</th></tr></thead>
+    <tbody>
+    {% for row in rankings %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ row.Player }}</td>
+        <td>{{ "%.2f"|format(row.Score) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
