@@ -26,8 +26,10 @@ try:
         .mean()
         .reset_index()
         .sort_values('WeightedScore', ascending=False)
-        .rename(columns={'WeightedScore': 'score'})  # Rename for template consistency
     )
+
+    # Convert column names to lowercase for consistency
+    ranking.columns = ranking.columns.str.lower()
 
     # 3. Render HTML
     env = Environment(loader=FileSystemLoader('templates'))
