@@ -1,18 +1,39 @@
 name: Build & Deploy Rankings
+
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:  # Allows manual triggering
+
+# Add permissions to fix the 403 error
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4  # Updated to v4
+      
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
-      - run: pip install -r requirements.txt
-      - run: python scripts/process.py
-      - uses: peaceiris/actions-gh-pages@v3
+          python-version: '3.13'  # More specific version
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Process data and generate HTML
+        run: python scripts/process.py
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4  # Updated to v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs
+          publish_branch: gh-pages
+          allow_empty_commit: false
+          keep_files: false
+          force_orphan: false
+          enable_jekyll: false
