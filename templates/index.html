@@ -9,8 +9,8 @@
     {% for row in rankings %}
       <tr>
         <td>{{ loop.index }}</td>
-        <td>{{ row.Player }}</td>
-        <td>{{ "%.2f"|format(row.WeightedScore) }}</td>
+        <td>{{ row['Player'] }}</td>
+        <td>{{ "%.2f"|format(row['WeightedScore']) }}</td>
       </tr>
     {% endfor %}
     </tbody>
