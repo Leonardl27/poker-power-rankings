@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 from jinja2 import Environment, FileSystemLoader
 
 try:
@@ -28,8 +29,12 @@ try:
         .sort_values('WeightedScore', ascending=False)
     )
 
-    # Convert column names to lowercase for consistency
-    ranking.columns = ranking.columns.str.lower()
+    # FIXED: Don't convert column names to lowercase - keep original case
+    # The template expects 'WeightedScore' and 'Player', not 'weightedscore' and 'player'
+    # ranking.columns = ranking.columns.str.lower()  # REMOVED THIS LINE
+
+    # Create output directory if it doesn't exist
+    os.makedirs('docs', exist_ok=True)
 
     # 3. Render HTML
     env = Environment(loader=FileSystemLoader('templates'))
@@ -40,10 +45,15 @@ try:
     with open('docs/index.html', 'w') as f:
         f.write(html)
 
+    print("\nHTML file successfully created at docs/index.html")
     print("\nFinal rankings:")
     print(ranking)
 
 except Exception as e:
     print(f"\nError occurred: {str(e)}")
-    print(f"DataFrame info: {df.info() if 'df' in locals() else 'No DataFrame created'}")
+    if 'df' in locals():
+        print("\nDataFrame info:")
+        print(df.info())
+    else:
+        print("No DataFrame was created - check if the Excel file exists")
     raise
