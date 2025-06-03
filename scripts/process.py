@@ -20,13 +20,13 @@ try:
     print("\nDataFrame info:")
     print(df.info())
     
-    # 2. Compute weighted score using existing WeightedScore column
-    # No need to convert column names since we're using WeightedScore directly
+    # 2. Aggregate per player using WeightedScore
     ranking = (df
         .groupby('Player')['WeightedScore']
         .mean()
         .reset_index()
         .sort_values('WeightedScore', ascending=False)
+        .rename(columns={'WeightedScore': 'score'})  # Rename for template consistency
     )
 
     # 3. Render HTML
