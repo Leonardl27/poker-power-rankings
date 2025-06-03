@@ -20,26 +20,21 @@ try:
     print("\nDataFrame info:")
     print(df.info())
     
-    # Convert column names to lowercase to match Excel's case-insensitive nature
-    df.columns = df.columns.str.lower()
-    
-    # 2. Compute weighted score using lowercase column names
-    df['score'] = 0.7 * df['finishscore'] + 0.3 * df['winscore']
-
-    # 3. Aggregate per player (mean or sum as you choose)
+    # 2. Compute weighted score using existing WeightedScore column
+    # No need to convert column names since we're using WeightedScore directly
     ranking = (df
-        .groupby('player')['score']
+        .groupby('Player')['WeightedScore']
         .mean()
         .reset_index()
-        .sort_values('score', ascending=False)
+        .sort_values('WeightedScore', ascending=False)
     )
 
-    # 4. Render HTML
+    # 3. Render HTML
     env = Environment(loader=FileSystemLoader('templates'))
     tmpl = env.get_template('index.html')
     html = tmpl.render(rankings=ranking.to_dict(orient='records'))
 
-    # Save the HTML file
+    # 4. Save the HTML file
     with open('docs/index.html', 'w') as f:
         f.write(html)
 
