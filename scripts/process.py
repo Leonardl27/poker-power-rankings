@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import os
 from jinja2 import Environment, FileSystemLoader
 
@@ -20,18 +21,46 @@ try:
     print(df.head())
     print("\nDataFrame info:")
     print(df.info())
-    
-    # 2. Aggregate per player using WeightedScore
-    ranking = (df
-        .groupby('Player')['WeightedScore']
-        .mean()
-        .reset_index()
-        .sort_values('WeightedScore', ascending=False)
-    )
 
-    # FIXED: Don't convert column names to lowercase - keep original case
-    # The template expects 'WeightedScore' and 'Player', not 'weightedscore' and 'player'
-    # ranking.columns = ranking.columns.str.lower()  # REMOVED THIS LINE
+    # Ensure 'FinishScore' is numeric, coercing errors to NaN
+    df['FinishScore'] = pd.to_numeric(df['FinishScore'], errors='coerce')
+    
+    # IMPORTANT ASSUMPTION: The data in 'Long_format_poker_results.xlsx' is assumed to be sorted chronologically
+    # for each player (oldest game first, newest game last) for the 'last 6 games' logic to work correctly.
+    # If not, a 'GameDate' or 'GameID' column should be added and used for sorting before this step.
+
+    # 2. Calculate player scores based on best 3 finishes in last 6 games
+    def calculate_player_score(player_games):
+        # player_games is already sorted if the main df was sorted by date/game_id per player
+        # For now, we assume it's sorted as per the file's current order for that player.
+        recent_games = player_games.tail(6) # Get last 6 games (or fewer if less than 6 played)
+        
+        finish_scores = recent_games['FinishScore'].dropna().sort_values(ascending=False) # Higher FinishScore is better
+        
+        num_recent_games_considered = len(recent_games)
+        num_valid_finishes_in_recent = len(finish_scores)
+        
+        if num_valid_finishes_in_recent == 0:
+            power_score = np.nan
+            num_finishes_used = 0
+        else:
+            best_finishes = finish_scores.head(3) # Get best 3 (or fewer)
+            power_score = best_finishes.mean()
+            num_finishes_used = len(best_finishes)
+            
+        return pd.Series({
+            'PowerScore': power_score,
+            'NumRecentGamesConsidered': num_recent_games_considered,
+            'NumFinishesUsed': num_finishes_used
+        })
+
+    ranking = df.groupby('Player').apply(calculate_player_score).reset_index()
+    
+    # Rename PowerScore to WeightedScore to match the template
+    ranking = ranking.rename(columns={'PowerScore': 'WeightedScore'})
+    
+    # Sort by WeightedScore (higher is better), NaN scores will be at the bottom
+    ranking = ranking.sort_values('WeightedScore', ascending=False, na_position='last')
 
     # Create output directory if it doesn't exist
     os.makedirs('docs', exist_ok=True)
